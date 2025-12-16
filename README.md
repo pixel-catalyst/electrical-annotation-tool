@@ -178,3 +178,14 @@ To align fully with the original specification, the following updates are planne
 2.  **Advanced Interactions:** Add keyboard shortcuts (Delete, Ctrl+Z for Undo).
 3.  **Custom Labels:** Add a UI component to allow users to define new label types on the fly.
 4.  **Testing:** Implement `vitest` unit tests for the `useAnnotationStore` and `fabric-utils`.
+
+---
+
+Made with by - Ashwin Sharma
+
+## License
+
+© 2024 Ashwin. All Rights Reserved.
+
+This software is proprietary and confidential. Unauthorized copying, distribution, modification, or use of this
+software, via any medium, is strictly prohibited without express written permission from the copyright holder.
