@@ -17,7 +17,7 @@ This project was developed under a strict time constraint of 1.5 days, significa
 | **Custom Labels** | Pending | The UI currently focuses on strict predefined categories to ensure data consistency. Custom text input is supported in the data model but not exposed in the UI yet. |
 | **COCO/YOLO Export** | Pending | Priority was given to the proprietary JSON format to ensure full state restoration (UI fidelity) before implementing lossy ML exports. |
 | **Keyboard Shortcuts** | Pending | Basic mouse interactions were prioritized for the MVP. |
-| **Unit Tests** | Pending | Rapid prototyping phase focused on visual regression and interactive feel. |
+| **Unit Tests** | Implemented | Vitest unit tests added for store and utility logic. |
 
 *All pending features are slated for future development cycles.*
 
@@ -168,6 +168,12 @@ npm run build
 ```
 The output will be generated in the `dist/` directory.
 
+### Running Tests
+Execute the test suite (Unit tests for Store and Utils):
+```bash
+npm run test
+```
+
 ---
 
 ## Future Roadmap
@@ -177,7 +183,6 @@ To align fully with the original specification, the following updates are planne
 1.  **Export Utilities:** Implement `utils/export.ts` to convert the internal JSON format to standard COCO/YOLO datasets for ML training.
 2.  **Advanced Interactions:** Add keyboard shortcuts (Delete, Ctrl+Z for Undo).
 3.  **Custom Labels:** Add a UI component to allow users to define new label types on the fly.
-4.  **Testing:** Implement `vitest` unit tests for the `useAnnotationStore` and `fabric-utils`.
 
 ---
 
