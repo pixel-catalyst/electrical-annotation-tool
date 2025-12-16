@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Canvas, Rect } from 'fabric';
+import { Canvas, Rect, FabricObject } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { useAnnotationStore } from '../store/useAnnotationStore';
 import { getCategoryColor } from '../types/annotation';
@@ -12,18 +12,22 @@ interface AnnotationCanvasProps {
   scale: number;
 }
 
+interface FabricObjectWithId extends FabricObject {
+  id: string;
+}
+
 export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, height, scale }) => {
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const fabricCanvas = useRef<Canvas | null>(null);
   const isDragging = useRef<boolean>(false);
   
-  const { 
-    annotations, 
-    activeTool, 
-    activeLabel, 
+  const {
+    annotations,
+    activeTool,
+    activeLabel,
     currentPage,
-    addAnnotation, 
-    updateAnnotation, 
+    addAnnotation,
+    updateAnnotation,
     selectAnnotation,
     selectedAnnotationId
   } = useAnnotationStore();
@@ -41,7 +45,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
       fabricCanvas.current.selection = activeTool === 'select';
       // Also update existing objects' selectability
       fabricCanvas.current.getObjects().forEach((obj) => {
-        obj.set({ 
+        obj.set({
           selectable: activeTool === 'select',
           evented: activeTool === 'select',
           hoverCursor: activeTool === 'select' ? 'move' : 'default'
@@ -69,7 +73,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     const handleSelection = () => {
       const activeObjects = canvas.getActiveObjects();
       if (activeObjects.length === 1) {
-        const id = (activeObjects[0] as any).id;
+        const id = (activeObjects[0] as FabricObjectWithId).id;
         if (id) selectAnnotation(id);
       } else {
         selectAnnotation(null);
@@ -83,9 +87,9 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     // Handle Modification (Drag/Resize)
     canvas.on('object:modified', (e) => {
       const target = e.target;
-      if (!target || !(target as any).id) return;
+      if (!target || !(target as FabricObjectWithId).id) return;
       
-      const id = (target as any).id;
+      const id = (target as FabricObjectWithId).id;
       const invScale = 1 / scale;
 
       updateAnnotation(id, {
@@ -184,7 +188,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
         created_at: new Date().toISOString(),
       };
       
-      canvas.remove(rect); 
+      canvas.remove(rect);
       addAnnotation(newAnnotation);
       selectAnnotation(id);
     });
@@ -192,7 +196,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     return () => {
       canvas.dispose();
     };
-  }, [width, height, scale, currentPage]);
+  }, [width, height, scale, currentPage, addAnnotation, selectAnnotation, updateAnnotation]);
 
 
   // 2. Sync State -> Canvas
@@ -207,15 +211,15 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     const newIds = new Set(pageAnnotations.map(a => a.id));
 
     // A. Remove deleted objects
-    existingObjects.forEach((obj: any) => {
-      if (obj.id && !newIds.has(obj.id)) {
+    existingObjects.forEach((obj) => {
+      if ((obj as FabricObjectWithId).id && !newIds.has((obj as FabricObjectWithId).id)) {
         canvas.remove(obj);
       }
     });
 
     // B. Add or Update objects
     pageAnnotations.forEach(a => {
-      let obj = existingObjects.find((o: any) => o.id === a.id);
+      let obj = existingObjects.find((o) => (o as FabricObjectWithId).id === a.id);
       
       const left = a.bbox.x * scale;
       const top = a.bbox.y * scale;
@@ -232,10 +236,10 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
             Math.abs(currentScaledWidth - width) > 1 || Math.abs(currentScaledHeight - height) > 1) {
              
              if (obj.type === 'rect') {
-                obj.set({ 
-                  left, 
-                  top, 
-                  width, 
+                obj.set({
+                  left,
+                  top,
+                  width,
                   height,
                   scaleX: 1,
                   scaleY: 1
@@ -282,7 +286,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
       }
 
       // Lock/Unlock based on tool
-      obj.set({ 
+      obj.set({
         selectable: activeTool === 'select',
         evented: activeTool === 'select',
         hoverCursor: activeTool === 'select' ? 'move' : 'default'
@@ -290,15 +294,18 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     });
 
     // C. Sync Selection State (Store -> Canvas)
+    // Ensure Fabric's active object matches the store's selectedAnnotationId
     const activeObjects = canvas.getActiveObjects();
-    const activeId = activeObjects.length === 1 ? (activeObjects[0] as any).id : null;
+    const activeId = activeObjects.length === 1 ? (activeObjects[0] as FabricObjectWithId).id : null;
 
     if (selectedAnnotationId && activeId !== selectedAnnotationId) {
-      const objToSelect = existingObjects.find((o: any) => o.id === selectedAnnotationId);
+      // Store has a selection, but Canvas doesn't match
+      const objToSelect = existingObjects.find((o) => (o as FabricObjectWithId).id === selectedAnnotationId);
       if (objToSelect) {
         canvas.setActiveObject(objToSelect);
       }
     } else if (!selectedAnnotationId && activeObjects.length > 0) {
+      // Store has no selection, but Canvas does
       canvas.discardActiveObject();
     }
 

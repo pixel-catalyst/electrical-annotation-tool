@@ -1,4 +1,5 @@
 import { Group, Rect, Text, FabricObject } from 'fabric';
+import type { GroupProps } from 'fabric';
 import type { Annotation } from '../types/annotation';
 import { getCategoryColor } from '../types/annotation';
 
@@ -84,7 +85,7 @@ export const createAnnotationObject = (annotation: Annotation, scale: number): F
     // Explicitly set width/height to avoid Fabric recalculating bounds that might drift
     width: targetWidth,
     height: targetHeight
-  } as any);
+  } as unknown as GroupProps);
 
   return group;
 };

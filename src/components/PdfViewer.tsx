@@ -61,7 +61,7 @@ export const PdfViewer: React.FC = () => {
     return Math.max(0.1, calculatedScale);
   }, []);
 
-  const onPageLoadSuccess = useCallback((page: any) => {
+  const onPageLoadSuccess = useCallback((page: { getViewport: (params: { scale: number }) => { width: number; height: number } }) => {
     const viewport = page.getViewport({ scale: 1 });
     const pageWidth = viewport.width;
     const pageHeight = viewport.height;

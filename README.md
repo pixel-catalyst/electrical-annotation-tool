@@ -4,6 +4,8 @@
 
 Sonrai Annotator is a specialized, web-based tool designed for labeling and annotating electrical symbols on construction plan drawings (PDFs). Built with modern web technologies, it combines precise engineering tools with a high-fidelity, VisionOS-inspired user interface.
 
+[Open Figma Prototype](https://www.figma.com/proto/WoiHwtWmBZsgkiONmttCid/Untitled?page-id=0%3A1&node-id=13-11&p=f&viewport=46%2C-710%2C0.58&t=sDe2N9LoMHw8CcUI-1&scaling=scale-down&content-scaling=fixed)
+
 ## Project Status & Scope Justification
 
 This project was developed under a strict time constraint of 1.5 days, significantly compressing the originally proposed 4-week timeline. As a result, strategic decisions were made to prioritize Core UX/UI fidelity and Essential Annotation Workflows over peripheral features like export formats or custom label creation.
