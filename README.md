@@ -181,7 +181,7 @@ To align fully with the original specification, the following updates are planne
 
 ---
 
-Made with by - Ashwin Sharma
+Made by - Ashwin Sharma
 
 ## License
 
