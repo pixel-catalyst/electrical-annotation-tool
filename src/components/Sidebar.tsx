@@ -34,7 +34,7 @@ export const Sidebar: React.FC = () => {
       {/* Glass Header */}
       <div className="p-4 border-b border-white/20 dark:border-white/5">
         <h1 className="font-serif font-bold text-xl bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
-          Studio Sonrai
+          Sonrai Annotator
         </h1>
       </div>
 

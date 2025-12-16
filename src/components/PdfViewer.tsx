@@ -81,6 +81,20 @@ export const PdfViewer: React.FC = () => {
     }
   }, [calculateFitScale, scale, setScale]);
 
+  // Center scroll on load/scale
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    // Small timeout to ensure layout has updated with new padding/size
+    const timer = setTimeout(() => {
+      container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+      container.scrollTop = (container.scrollHeight - container.clientHeight) / 2;
+    }, 10);
+
+    return () => clearTimeout(timer);
+  }, [scale, pageDimensions, currentFile]);
+
   const handleFitWidth = () => {
      if (containerRef.current && pageDimensions.width > 0) {
         const containerWidth = containerRef.current.offsetWidth;
@@ -93,7 +107,7 @@ export const PdfViewer: React.FC = () => {
       
       {/* PDF Content Area */}
       <div className="flex-1 overflow-auto custom-scrollbar text-center" ref={containerRef}>
-        <div className="min-w-full min-h-full inline-flex justify-center items-center p-8">
+        <div className="min-w-full min-h-full inline-flex justify-center items-center py-32 px-[35vw]">
           {currentFile ? (
             <div className="relative shadow-2xl transition-transform duration-200 ease-out origin-top rounded-lg overflow-hidden ring-1 ring-black/5 dark:ring-white/10 text-left">
               <Document
@@ -133,7 +147,7 @@ export const PdfViewer: React.FC = () => {
             <div className="w-24 h-24 bg-white/20 dark:bg-white/5 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-6 border border-white/20 shadow-lg">
                <Monitor size={48} className="opacity-40 text-gray-800 dark:text-white" />
             </div>
-            <p className="text-3xl mb-3 font-serif font-bold text-transparent bg-clip-text bg-gradient-to-br from-gray-700 to-gray-400 dark:from-white dark:to-gray-200">Studio Sonrai</p>
+            <p className="text-3xl mb-3 font-serif font-bold text-transparent bg-clip-text bg-gradient-to-br from-gray-700 to-gray-400 dark:from-white dark:to-gray-200">Sonrai Annotator</p>
             <p className="text-sm text-gray-500 dark:text-gray-300 font-medium tracking-wide">SELECT A DRAWING TO BEGIN</p>
           </div>
         )}

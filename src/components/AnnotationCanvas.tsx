@@ -3,6 +3,7 @@ import { Canvas, Rect } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { useAnnotationStore } from '../store/useAnnotationStore';
 import { getCategoryColor } from '../types/annotation';
+import { createAnnotationObject } from '../utils/fabric-utils';
 import type { Annotation } from '../types/annotation';
 
 interface AnnotationCanvasProps {
@@ -91,8 +92,8 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
         bbox: {
           x: (target.left || 0) * invScale,
           y: (target.top || 0) * invScale,
-          width: (target.width || 0) * (target.scaleX || 1) * invScale,
-          height: (target.height || 0) * (target.scaleY || 1) * invScale,
+          width: (target.getScaledWidth() || 0) * invScale,
+          height: (target.getScaledHeight() || 0) * invScale,
         }
       });
       
@@ -177,8 +178,8 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
         bbox: {
           x: (rect.left || 0) * invScale,
           y: (rect.top || 0) * invScale,
-          width: (rect.width || 0) * invScale,
-          height: (rect.height || 0) * invScale,
+          width: ((rect.width || 0) + (rect.strokeWidth || 0)) * invScale,
+          height: ((rect.height || 0) + (rect.strokeWidth || 0)) * invScale,
         },
         created_at: new Date().toISOString(),
       };
@@ -191,7 +192,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     return () => {
       canvas.dispose();
     };
-  }, [width, height, scale, currentPage]); // REMOVED activeLabel and activeTool from deps
+  }, [width, height, scale, currentPage]);
 
 
   // 2. Sync State -> Canvas
@@ -214,7 +215,7 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
 
     // B. Add or Update objects
     pageAnnotations.forEach(a => {
-      let obj = existingObjects.find((o: any) => o.id === a.id) as Rect;
+      let obj = existingObjects.find((o: any) => o.id === a.id);
       
       const left = a.bbox.x * scale;
       const top = a.bbox.y * scale;
@@ -224,46 +225,59 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
 
       if (obj) {
         // Update geometry if needed
+        const currentScaledWidth = obj.getScaledWidth();
+        const currentScaledHeight = obj.getScaledHeight();
+
         if (Math.abs(obj.left - left) > 1 || Math.abs(obj.top - top) > 1 || 
-            Math.abs(obj.width - width) > 1 || Math.abs(obj.height - height) > 1) {
-             obj.set({ 
-               left, 
-               top, 
-               width, 
-               height,
-               scaleX: 1,
-               scaleY: 1
-             });
+            Math.abs(currentScaledWidth - width) > 1 || Math.abs(currentScaledHeight - height) > 1) {
+             
+             if (obj.type === 'rect') {
+                obj.set({ 
+                  left, 
+                  top, 
+                  width, 
+                  height,
+                  scaleX: 1,
+                  scaleY: 1
+                });
+             } else {
+                // For Groups/Shapes, we scale them to fit
+                // Avoid division by zero
+                const baseWidth = obj.width || 1;
+                const baseHeight = obj.height || 1;
+                
+                obj.set({
+                    left,
+                    top,
+                    scaleX: width / baseWidth,
+                    scaleY: height / baseHeight
+                });
+             }
              obj.setCoords();
         }
         
-        // Update Styling
+        // Update Styling (Selection State)
         const isSelected = a.id === selectedAnnotationId;
+        
         obj.set({
-          stroke: isSelected ? '#2563EB' : color,
-          strokeWidth: isSelected ? 3 : 2,
-          fill: color + '33',
           cornerColor: isSelected ? '#2563EB' : color,
           borderColor: isSelected ? '#2563EB' : color,
+          cornerStrokeColor: '#fff',
         });
 
+        // For Rects, we can update stroke/fill dynamically easily.
+        // For Groups created by our utility, the color is baked in. 
+        // We could traverse the group to update color if needed, but for now we assume label (and color) doesn't change often.
+        if (obj.type === 'rect') {
+           obj.set({
+             stroke: isSelected ? '#2563EB' : color,
+             strokeWidth: isSelected ? 3 : 2,
+           });
+        }
+
       } else {
-        // Create new object
-        obj = new Rect({
-          left,
-          top,
-          width,
-          height,
-          fill: color + '33',
-          stroke: color,
-          strokeWidth: 2,
-          transparentCorners: false,
-          cornerColor: color,
-          cornerStrokeColor: '#fff',
-          borderColor: color,
-          cornerStyle: 'circle',
-        });
-        (obj as any).id = a.id;
+        // Create new object using our utility
+        obj = createAnnotationObject(a, scale);
         canvas.add(obj);
       }
 
@@ -276,18 +290,15 @@ export const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({ width, heigh
     });
 
     // C. Sync Selection State (Store -> Canvas)
-    // Ensure Fabric's active object matches the store's selectedAnnotationId
     const activeObjects = canvas.getActiveObjects();
     const activeId = activeObjects.length === 1 ? (activeObjects[0] as any).id : null;
 
     if (selectedAnnotationId && activeId !== selectedAnnotationId) {
-      // Store has a selection, but Canvas doesn't match
       const objToSelect = existingObjects.find((o: any) => o.id === selectedAnnotationId);
       if (objToSelect) {
         canvas.setActiveObject(objToSelect);
       }
     } else if (!selectedAnnotationId && activeObjects.length > 0) {
-      // Store has no selection, but Canvas does
       canvas.discardActiveObject();
     }
 

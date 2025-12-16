@@ -18,12 +18,15 @@ export interface Annotation {
   id: string;
   page: number;
   label: AnnotationType;
+  /** Custom text/name associated with the annotation */
+  text?: string;
   bbox: BoundingBox;
   created_at: string;
   created_by?: string;
 }
 
 export interface AnnotationFile {
+  version: string;
   file: string;
   annotations: Annotation[];
   metadata: {
